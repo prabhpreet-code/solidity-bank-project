@@ -1,0 +1,58 @@
+pragma solidity >=0.5.13 < 0.7.3 ;
+
+contract Bank {
+    
+    address public owner ;
+    string public _name ;
+    
+    constructor()public{
+        owner = msg.sender ;
+    }
+    
+    mapping(address=>uint) eachAccount ;
+    mapping(uint=>address) uniqueId ;
+    mapping(address=>Accounts) public addressToAccount ;
+    mapping(string=>Accounts) public checkDetails ;
+    
+    struct Accounts{
+        uint balance ;
+        address account ;
+        
+    }
+    Accounts[] accountDetails ;
+    
+    function makeAccount(string memory name)public {
+        require(eachAccount[msg.sender]==0 , 'NO MORE THAN 1 ACCOUNTS ON SINGLE ADDRESS');    
+        address account = msg.sender ;
+        uint balance = 0 ;
+        uint id = accountDetails.push(Accounts( balance , account)) -1 ;
+        addressToAccount[msg.sender] = Accounts( balance , account) ;
+        uniqueId[id] = msg.sender ;
+        eachAccount[msg.sender]++ ;
+        _name = name ;
+        checkDetails[_name] = Accounts(balance , account) ;
+    }
+    
+    modifier checkOwner{
+        require(msg.sender==owner ,'YOU MUST OWN THIS ACCOUNT FOR PERFORMING TRANSACTIONS');
+        _;    
+        
+    }
+    
+    function recieveMoney() public payable {
+        Accounts memory myBalance = Accounts(msg.value, msg.sender);
+        addressToAccount[msg.sender] = myBalance;
+        checkDetails[_name] = myBalance ;
+
+    }
+    
+    function sendMoney(address payable destination) public payable checkOwner{
+       destination.transfer(msg.value) ;
+       Accounts memory myBalance = Accounts(msg.value , msg.sender) ;
+       addressToAccount[msg.sender] = myBalance ;
+       checkDetails[_name] = myBalance; 
+    
+    }
+    
+     
+}
